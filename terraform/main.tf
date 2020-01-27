@@ -1,7 +1,7 @@
 provider "google" {
   credentials = "${file("${lookup(var.credential, "data")}")}"
   project     = "${lookup(var.project_id, "${terraform.workspace}")}"
-  region      = "asia-northeast1"
+  region      = "asia-east2"
 }
 
 data "archive_file" "function_zip" {
@@ -11,8 +11,8 @@ data "archive_file" "function_zip" {
 }
 
 resource "google_storage_bucket" "slack_functions_bucket" {
-  name          = "${lookup(var.project, "${terraform.workspace}")}-scheduler-bucket"
-  project       = "${lookup(var.project, "${terraform.workspace}")}"
+  name          = "${lookup(var.project_id, "${terraform.workspace}")}-scheduler-bucket"
+  project       = "${lookup(var.project_id, "${terraform.workspace}")}"
   location      = "asia"
   force_destroy = true
 }
@@ -25,13 +25,13 @@ resource "google_storage_bucket_object" "functions_zip" {
 
 resource "google_pubsub_topic" "slack_notify" {
   name    = "slack-notify"
-  project = "${lookup(var.project, "${terraform.workspace}")}"
+  project = "${lookup(var.project_id, "${terraform.workspace}")}"
 }
 
 resource "google_cloudfunctions_function" "slack_notification" {
   name        = "SlackNotification"
-  project     = "${lookup(var.project, "${terraform.workspace}")}"
-  region      = "asia-northeast1"
+  project     = "${lookup(var.project_id, "${terraform.workspace}")}"
+  region      = "asia-east2"
   runtime     = "go111"
   entry_point = "SlackNotification"
 
@@ -54,7 +54,7 @@ resource "google_cloudfunctions_function" "slack_notification" {
 
 resource "google_cloud_scheduler_job" "slack-notify-scheduler" {
   name        = "slack-notify-daily"
-  project     = "${lookup(var.project, "${terraform.workspace}")}"
+  project     = "${lookup(var.project_id, "${terraform.workspace}")}"
   schedule    = "0 8 * * *"
   description = "suggesting your morning/lunch/dinner"
   time_zone   = "Asia/Tokyo"
